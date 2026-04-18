@@ -1,0 +1,17 @@
+9238:C 14 Apr 2026 12:14:33.727 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+9238:C 14 Apr 2026 12:14:33.727 * Redis version=8.6.2, bits=64, commit=00000000, modified=1, pid=9238, just started
+9238:C 14 Apr 2026 12:14:33.727 * Configuration loaded
+9238:M 14 Apr 2026 12:14:33.728 * monotonic clock: ARM CNTVCT @ 24 ticks/us
+9238:M 14 Apr 2026 12:14:33.730 # Failed to write PID file: Permission denied
+9238:M 14 Apr 2026 12:14:33.730 * Running mode=standalone, port=6379.
+9238:M 14 Apr 2026 12:14:33.730 # WARNING: The TCP backlog setting of 511 cannot be enforced because kern.ipc.somaxconn is set to the lower value of 128.
+9238:M 14 Apr 2026 12:14:33.730 * Server initialized
+9238:M 14 Apr 2026 12:14:33.731 * Ready to accept connections tcp
+9238:M 14 Apr 2026 12:14:33.731 # WARNING: Redis does not require authentication. Redis will accept connections from any local client.
+9238:signal-handler (1776164349) Received SIGTERM scheduling shutdown...
+9238:M 14 Apr 2026 16:29:09.066 * User requested shutdown...
+9238:M 14 Apr 2026 16:29:09.067 * Saving the final RDB snapshot before exiting.
+9238:M 14 Apr 2026 16:29:09.068 * BGSAVE done, 0 keys saved, 0 keys skipped, 88 bytes written.
+9238:M 14 Apr 2026 16:29:09.076 * DB saved on disk
+9238:M 14 Apr 2026 16:29:09.077 * Removing the pid file.
+9238:M 14 Apr 2026 16:29:09.077 # Redis is now ready to exit, bye bye...

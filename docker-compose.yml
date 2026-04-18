@@ -1,0 +1,188 @@
+version: '3.9'
+
+services:
+  # ── Infrastructure ───────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: npig-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports: ["2181:2181"]
+    networks: [npig-net]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: npig-kafka
+    depends_on: [zookeeper]
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks: [npig-net]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: npig-kafka-ui
+    depends_on: [kafka]
+    ports: ["9093:8080"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: npig-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks: [npig-net]
+
+  mongodb:
+    image: mongo:7.0
+    container_name: npig-mongodb
+    ports: ["27017:27017"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: npig
+      MONGO_INITDB_ROOT_PASSWORD: npig_secure_2024
+      MONGO_INITDB_DATABASE: npig_auth
+    volumes:
+      - mongo-data:/data/db
+    networks: [npig-net]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: npig-postgres
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: npig_main
+      POSTGRES_USER: npig
+      POSTGRES_PASSWORD: npig_secure_2024
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks: [npig-net]
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: npig-redis
+    ports: ["6379:6379"]
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks: [npig-net]
+
+  # ── Microservices ─────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: npig-api-gateway
+    ports: ["8000:8000"]
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8001
+      INGEST_SERVICE_URL: http://ingestion-service:8002
+      PREDICT_SERVICE_URL: http://prediction-service:8003
+      ALERT_SERVICE_URL: http://alert-service:8004
+      TWIN_SERVICE_URL: http://digital-twin-service:8005
+    depends_on: [auth-service, ingestion-service, prediction-service, alert-service]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: npig-auth-service
+    ports: ["8001:8001"]
+    environment:
+      MONGO_URL: mongodb://npig:npig_secure_2024@mongodb:27017
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET_KEY: npig-jwt-super-secret-key-government-2024
+    depends_on: [mongodb, redis]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  ingestion-service:
+    build:
+      context: ./services/ingestion-service
+      dockerfile: Dockerfile
+    container_name: npig-ingestion-service
+    ports: ["8002:8002"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MONGO_URL: mongodb://npig:npig_secure_2024@mongodb:27017
+    depends_on: [kafka, mongodb]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  prediction-service:
+    build:
+      context: ./services/prediction-service
+      dockerfile: Dockerfile
+    container_name: npig-prediction-service
+    ports: ["8003:8003"]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  alert-service:
+    build:
+      context: ./services/alert-service
+      dockerfile: Dockerfile
+    container_name: npig-alert-service
+    ports: ["8004:8004"]
+    depends_on: [redis]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  digital-twin-service:
+    build:
+      context: ./services/digital-twin-service
+      dockerfile: Dockerfile
+    container_name: npig-digital-twin-service
+    ports: ["8005:8005"]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  # ── Frontend ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: npig-frontend
+    ports: ["3000:80"]
+    depends_on: [api-gateway]
+    networks: [npig-net]
+    restart: unless-stopped
+
+  # ── Monitoring ───────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: npig-prometheus
+    ports: ["9090:9090"]
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks: [npig-net]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: npig-grafana
+    ports: ["3001:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: npig_grafana_2024
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on: [prometheus]
+    networks: [npig-net]
+    restart: unless-stopped
+
+networks:
+  npig-net:
+    driver: bridge
+    name: npig-network
+
+volumes:
+  mongo-data:
+  pg-data:
+  redis-data:
+  grafana-data:
