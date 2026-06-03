@@ -5,29 +5,35 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
-        display: ['Syne', 'sans-serif'],
+        display: ['SF Pro Display', 'Inter', 'sans-serif'],
       },
       colors: {
-        // Dark theme palette
+        // Premium Dark Mode Palette (Apple/OpenAI inspired)
         void:    '#030712',
-        deep:    '#080d1a',
-        base:    '#0a1128',
+        deep:    '#0F172A',
+        base:    '#1E293B',
         card:    '#0d1632',
         elevated:'#111e40',
-        // Brand
+        // Brand Accents (Subtle gradients)
         brand: {
           50:  '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
           300: '#93c5fd',
           400: '#60a5fa',
-          500: '#3b82f6',
+          500: '#3B82F6',
           600: '#2563eb',
           700: '#1d4ed8',
           800: '#1e40af',
           900: '#1e3a8a',
+        },
+        // Additional accent colors
+        accent: {
+          blue:   '#3B82F6',
+          purple: '#8B5CF6',
+          cyan:   '#06B6D4',
         },
         neon: {
           blue:   '#00d4ff',

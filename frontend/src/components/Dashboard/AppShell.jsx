@@ -233,39 +233,39 @@ export default function AppShell({ children }) {
         </nav>
 
         {/* Bottom: NEXUS + Status + Collapse */}
-        <div className="border-t border-white/[0.06] p-2 flex flex-col gap-1.5">
-          {/* NPIG AI button */}
+        <div className="border-t border-white/[0.04] p-2 flex flex-col gap-1">
+          {/* NEXUS AI button */}
           <button
             onClick={toggleNexus}
-            title="Open NPIG AI Assistant"
+            title="Open NEXUS AI Assistant"
             className={clsx(
-              'flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all',
+              'flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
               nexusOpen
-                ? 'bg-brand-600/20 text-brand-300 border border-brand-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-white/[0.05]',
+                ? 'bg-violet-500/10 text-violet-300 border border-violet-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.04]',
               isCollapsed && 'justify-center px-2'
             )}
           >
-            <img src="/npig-logo.png" alt="NPIG AI" className="w-5 h-5 rounded object-cover flex-shrink-0" />
+            <img src="/npig-logo.png" alt="NEXUS AI" className="w-5 h-5 rounded object-cover flex-shrink-0" />
             <AnimatePresence>
-              {!isCollapsed && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>NPIG AI</motion.span>}
+              {!isCollapsed && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>NEXUS AI</motion.span>}
             </AnimatePresence>
           </button>
 
-          {/* Connection & Collapse */}
+          {/* Connection status */}
           <AnimatePresence>
             {!isCollapsed && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex items-center gap-2 px-3 py-1">
-                <div className={wsConnected ? 'status-dot-ok' : 'status-dot-critical'} />
-                <span className="text-[10px] text-slate-500">{wsConnected ? 'Live feed active' : 'Connecting...'}</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${wsConnected ? 'bg-emerald-400' : 'bg-red-400'} ${wsConnected ? 'animate-pulse' : ''}`} />
+                <span className="text-[9px] text-slate-600 font-mono">{wsConnected ? 'Live Feed Active' : 'Connecting...'}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
           <button
             onClick={toggleSidebarCollapse}
-            className={clsx('btn-ghost py-2 rounded-xl text-xs', isCollapsed && 'justify-center')}
+            className={clsx('flex items-center justify-center gap-2 py-2 rounded-xl text-[10px] text-slate-600 hover:text-white hover:bg-white/[0.03] transition-all', isCollapsed && 'justify-center')}
           >
             {isCollapsed ? '→' : '← Collapse'}
           </button>
@@ -276,15 +276,14 @@ export default function AppShell({ children }) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header className={clsx(
-          'h-16 flex items-center px-4 gap-3 flex-shrink-0 relative z-10',
+          'h-14 flex items-center px-4 gap-3 flex-shrink-0 relative z-10',
           'border-b backdrop-blur-2xl',
           theme === 'light'
             ? 'bg-white/95 border-slate-200'
-            : 'border-white/[0.06]'
+            : 'border-white/[0.04]'
         )}
           style={theme === 'dark' ? {
-            background: 'rgba(4, 7, 18, 0.92)',
-            boxShadow: '0 1px 0 rgba(37,99,235,0.15), 0 4px 32px rgba(0,0,0,0.3)',
+            background: 'rgba(3, 7, 18, 0.95)',
           } : {}}
         >
           {/* Mobile menu */}
