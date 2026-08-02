@@ -690,6 +690,33 @@ export default function LoginPage() {
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-violet-500/5 to-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
 
               <div className="p-9 relative z-10">
+
+                {/* ── Official NPIG Logo Header ── */}
+                <div className="flex flex-col items-center mb-8">
+                  {/* Logo with animated glow ring */}
+                  <div className="relative mb-4">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+                      className="absolute -inset-3 rounded-full border border-dashed border-blue-500/20 pointer-events-none"
+                    />
+                    <motion.div
+                      animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.8, 0.4] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      className="absolute -inset-2 rounded-full bg-gradient-to-r from-blue-500/15 via-violet-500/10 to-cyan-500/15 blur-md pointer-events-none"
+                    />
+                    <img
+                      src="/npig-logo.png"
+                      alt="NPIG"
+                      className="relative w-20 h-20 rounded-2xl object-contain drop-shadow-[0_0_24px_rgba(59,130,246,0.6)] z-10"
+                    />
+                    {/* Online status dot */}
+                    <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#030712] shadow-[0_0_12px_rgba(52,211,153,0.8)] animate-pulse z-20" />
+                  </div>
+                  <h2 className="font-display font-black text-white text-xl tracking-[0.15em] mb-1">NPIG</h2>
+                  <p className="text-[10px] text-slate-500 font-mono tracking-[0.3em] uppercase">Secure Intelligence Access</p>
+                </div>
+
                 {/* Premium Method Selector */}
                 <div className="flex gap-2 mb-8 bg-white/[0.03] p-1.5 rounded-2xl border border-white/[0.06]">
                   {[

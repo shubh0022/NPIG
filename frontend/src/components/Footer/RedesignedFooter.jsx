@@ -439,9 +439,11 @@ export default function RedesignedFooter() {
             className="flex flex-col items-center md:items-start gap-5"
           >
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-base font-black text-white shadow-[0_0_24px_rgba(59,130,246,0.4)]">
-                ⬡
-              </div>
+              <img
+                src="/npig-logo.png"
+                alt="NPIG Logo"
+                className="w-11 h-11 rounded-2xl object-contain drop-shadow-[0_0_16px_rgba(59,130,246,0.5)]"
+              />
               <span className="font-display font-black text-white dark:text-white light:text-slate-900 tracking-[0.2em] text-base">
                 NPIG
               </span>

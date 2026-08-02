@@ -11,7 +11,7 @@ const NAV_SECTIONS = [
   {
     label: 'Intelligence',
     items: [
-      { to: '/dashboard',    icon: '⬡',  label: 'Command Center'  },
+      { to: '/dashboard',    icon: '⊞',  label: 'Command Center'  },
       { to: '/alerts',       icon: '🚨',  label: 'Active Alerts',  badge: 'alerts' },
       { to: '/predictions',  icon: '🧠',  label: 'AI Predictions'  },
       { to: '/digital-twin', icon: '🌐',  label: 'Digital Twin'    },
@@ -168,15 +168,18 @@ export default function AppShell({ children }) {
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-3 h-16 border-b border-white/[0.06] flex-shrink-0">
-          <img
-            src="/npig-logo.png"
-            alt="NPIG"
-            className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
-          />
+          <div className="relative flex-shrink-0 group">
+            <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 opacity-0 group-hover:opacity-60 blur transition duration-500 rounded-lg" />
+            <img
+              src="/npig-logo.png"
+              alt="NPIG"
+              className="relative w-9 h-9 rounded-lg object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] flex-shrink-0"
+            />
+          </div>
           <AnimatePresence>
             {!isCollapsed && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="font-display font-extrabold text-white text-sm tracking-widest leading-none">NPIG</div>
+                <div className="font-display font-extrabold text-white text-sm tracking-widest leading-none bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">NPIG</div>
                 <div className="text-[9px] text-slate-500 tracking-widest">INTELLIGENCE GRID</div>
               </motion.div>
             )}

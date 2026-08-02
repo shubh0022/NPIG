@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Stars, Float } from '@react-three/drei'
 import * as THREE from 'three'
 import useStore from '../store/useStore'
 import RedesignedFooter from '../components/Footer/RedesignedFooter'
+import { X } from 'lucide-react'
 
 /* ─── 3D Hero Globe (Enhanced Premium) ─────────────────────────── */
 function HeroGlobe() {
@@ -112,8 +113,7 @@ function HeroGlobe() {
             <bufferGeometry>
               <bufferAttribute
                 attach="attributes-position"
-                count={2}
-                array={new Float32Array([...node.position, ...nextNode.position])}
+                args={[new Float32Array([...node.position, ...nextNode.position]), 3]}
               />
             </bufferGeometry>
             <lineBasicMaterial 
@@ -324,8 +324,13 @@ export default function LandingPage() {
       <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-3xl bg-[#030712]/80" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-violet-500 to-cyan-500 flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-[0_0_32px_rgba(59,130,246,0.4)] animate-pulse-glow">
-              ⬡
+            <div className="relative group">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 opacity-70 blur-md group-hover:opacity-100 transition duration-500" />
+              <img
+                src="/npig-logo.png"
+                alt="NPIG Logo"
+                className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-contain drop-shadow-[0_0_16px_rgba(59,130,246,0.6)]"
+              />
             </div>
             <div>
               <span className="font-display font-black text-white tracking-[0.2em] text-sm sm:text-base block leading-none">NPIG</span>

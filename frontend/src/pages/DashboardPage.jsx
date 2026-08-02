@@ -404,6 +404,11 @@ export default function DashboardPage() {
       {/* Premium Header */}
       <div className="flex items-center justify-between flex-wrap gap-6">
         <div>
+          {/* NPIG Brand identity chip */}
+          <div className="flex items-center gap-3 mb-3">
+            <img src="/npig-logo.png" alt="NPIG" className="w-8 h-8 rounded-xl object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+            <span className="text-[10px] font-mono font-bold text-blue-400 tracking-[0.25em] uppercase bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">NPIG Command</span>
+          </div>
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}

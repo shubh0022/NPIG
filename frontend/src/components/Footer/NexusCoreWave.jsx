@@ -36,9 +36,8 @@ export default function NexusCoreWave({ active = true }) {
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.6)] border border-cyan-300 relative z-10"
         >
-          {/* Inner ring */}
-          <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center">
-            <span className="text-white text-xs font-mono">⬡</span>
+          <div className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center p-0.5 overflow-hidden">
+            <img src="/npig-logo.png" alt="Nexus NPIG" className="w-full h-full object-contain drop-shadow" />
           </div>
         </motion.div>
       </div>

@@ -328,21 +328,25 @@ function GenerateModal({ template, onClose }) {
           style={{ background: `${template.hex}15` }} />
         
         <div className="p-8 relative z-10">
-          <div className="flex items-center gap-4 mb-6">
-            <motion.div
-              whileHover={{ rotate: 12, scale: 1.1 }}
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-              style={{ 
-                background: `${template.hex}20`, 
-                border: `1px solid ${template.hex}30`,
-                boxShadow: `0 0 24px ${template.hex}30`
-              }}
-            >
-              {template.icon}
-            </motion.div>
-            <div>
-              <h3 className="text-sm font-black text-white tracking-tight">{template.title}</h3>
-              <p className="text-[10px] text-slate-500 font-medium">Configure and generate</p>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              {/* NPIG logo watermark */}
+              <img src="/npig-logo.png" alt="NPIG" className="w-7 h-7 rounded-lg object-contain drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] opacity-70" />
+              <motion.div
+                whileHover={{ rotate: 12, scale: 1.1 }}
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                style={{ 
+                  background: `${template.hex}20`, 
+                  border: `1px solid ${template.hex}30`,
+                  boxShadow: `0 0 24px ${template.hex}30`
+                }}
+              >
+                {template.icon}
+              </motion.div>
+              <div>
+                <h3 className="text-sm font-black text-white tracking-tight">{template.title}</h3>
+                <p className="text-[10px] text-slate-500 font-medium">Configure and generate</p>
+              </div>
             </div>
           </div>
 
@@ -513,6 +517,11 @@ export default function ReportsPage() {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-6"
       >
         <div>
+          {/* Official NPIG brand badge on page header */}
+          <div className="flex items-center gap-3 mb-3">
+            <img src="/npig-logo.png" alt="NPIG" className="w-8 h-8 rounded-xl object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]" />
+            <span className="text-[10px] font-mono font-bold text-blue-400 tracking-[0.25em] uppercase">NPIG · Intelligence Reports</span>
+          </div>
           <motion.h1 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
