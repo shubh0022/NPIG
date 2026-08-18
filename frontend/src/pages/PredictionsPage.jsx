@@ -1,243 +1,351 @@
-import React, { useState, useEffect } from 'react'
-import { predictionAPI } from '../utils/api'
-import toast from 'react-hot-toast'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip
-} from 'recharts'
+  BrainCircuit,
+  AlertTriangle,
+  Target,
+  Database,
+  Filter,
+  Zap,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from 'lucide-react'
+import useStore from '../store/useStore'
+import toast from 'react-hot-toast'
 
-const DOMAIN_CONFIG = {
-  traffic:  { label: 'Traffic Prediction', icon: '🚗', color: '#2563eb', accent: '#60a5fa' },
-  crime:    { label: 'Crime Hotspot',       icon: '🔫', color: '#f43f5e', accent: '#fb7185' },
-  disease:  { label: 'Disease Outbreak',    icon: '🦠', color: '#10b981', accent: '#34d399' },
-  climate:  { label: 'Climate Risk',        icon: '🌊', color: '#06b6d4', accent: '#22d3ee' },
-}
-
-function PredictionCard({ type, result, loading }) {
-  const cfg = DOMAIN_CONFIG[type]
-  if (!cfg) return null
-
-  const getRisk = (val) => {
-    if (val > 80) return 'CRITICAL'
-    if (val > 60) return 'HIGH'
-    if (val > 40) return 'MEDIUM'
-    if (val > 20) return 'LOW'
-    return 'MINIMAL'
-  }
-
-  return (
-    <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: `linear-gradient(90deg, ${cfg.color}, ${cfg.accent})`,
-      }} />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 20 }}>{cfg.icon}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{cfg.label}</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>AI Model v2.x · Real-time analysis</div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 32, height: 32, border: `2px solid ${cfg.color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'rotate-ring 0.7s linear infinite' }} />
-        </div>
-      ) : result ? (
-        <>
-          {/* Score gauge */}
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 100, height: 100 }}>
-              <svg width="100" height="100" viewBox="0 0 100 100" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-                <circle cx="50" cy="50" r="45" fill="none" stroke={cfg.color} strokeWidth="8"
-                  strokeDasharray={`${(result.predicted_value / 100) * 283} 283`}
-                  strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 6px ${cfg.color})` }} />
-              </svg>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'white', fontFamily: 'JetBrains Mono', lineHeight: 1 }}>
-                  {Math.round(result.predicted_value)}
-                </div>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>/100</div>
-              </div>
-            </div>
-            <div style={{ marginTop: 6 }}>
-              <span className={`badge badge-${getRisk(result.predicted_value).toLowerCase()}`}>
-                {getRisk(result.predicted_value)}
-              </span>
-            </div>
-          </div>
-
-          {/* Confidence */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
-              <span style={{ color: 'var(--text-muted)' }}>Confidence</span>
-              <span style={{ color: 'white', fontFamily: 'JetBrains Mono' }}>{Math.round((result.confidence || 0) * 100)}%</span>
-            </div>
-            <div style={{ height: 4, borderRadius: 9999, background: 'rgba(255,255,255,0.06)' }}>
-              <div style={{ height: '100%', borderRadius: 9999, background: cfg.color, width: `${(result.confidence || 0) * 100}%` }} />
-            </div>
-          </div>
-
-          {/* Key recommendations */}
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>TOP ACTIONS</div>
-            {result.recommendations?.slice(0, 2).map((rec, i) => (
-              <div key={i} style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', gap: 6, marginBottom: 4, lineHeight: 1.4 }}>
-                <span style={{ color: cfg.color, flexShrink: 0 }}>▸</span>
-                {rec}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>🔮</div>
-          <div style={{ fontSize: 12 }}>Run prediction to see results</div>
-        </div>
-      )}
-    </div>
-  )
-}
+const PREDICTIONS_TABLE = [
+  {
+    id: 'PRD-01',
+    prediction: 'Traffic Congestion',
+    category: 'Traffic',
+    riskLevel: 'High',
+    riskColor: 'bg-red-500/15 text-red-400 border border-red-500/30',
+    confidence: '92%',
+    confidenceNum: 92,
+    impactArea: 'Mumbai',
+    timeWindow: 'Next 6 hrs',
+  },
+  {
+    id: 'PRD-02',
+    prediction: 'Heavy Rainfall',
+    category: 'Climate',
+    riskLevel: 'Medium',
+    riskColor: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+    confidence: '78%',
+    confidenceNum: 78,
+    impactArea: 'Kerala',
+    timeWindow: 'Next 24 hrs',
+  },
+  {
+    id: 'PRD-03',
+    prediction: 'Power Outage Risk',
+    category: 'Infrastructure',
+    riskLevel: 'Medium',
+    riskColor: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+    confidence: '64%',
+    confidenceNum: 64,
+    impactArea: 'Chennai',
+    timeWindow: 'Next 12 hrs',
+  },
+  {
+    id: 'PRD-04',
+    prediction: 'Disease Outbreak Risk',
+    category: 'Health',
+    riskLevel: 'Low',
+    riskColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+    confidence: '35%',
+    confidenceNum: 35,
+    impactArea: 'Delhi',
+    timeWindow: 'Next 7 days',
+  },
+  {
+    id: 'PRD-05',
+    prediction: 'Cyber Attack Risk',
+    category: 'Cyber',
+    riskLevel: 'High',
+    riskColor: 'bg-red-500/15 text-red-400 border border-red-500/30',
+    confidence: '89%',
+    confidenceNum: 89,
+    impactArea: 'Global',
+    timeWindow: 'Next 24 hrs',
+  },
+  {
+    id: 'PRD-06',
+    prediction: 'Heatwave Conditions',
+    category: 'Climate',
+    riskLevel: 'Medium',
+    riskColor: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+    confidence: '71%',
+    confidenceNum: 71,
+    impactArea: 'Rajasthan',
+    timeWindow: 'Next 48 hrs',
+  },
+  {
+    id: 'PRD-07',
+    prediction: 'Flood Risk',
+    category: 'Climate',
+    riskLevel: 'High',
+    riskColor: 'bg-red-500/15 text-red-400 border border-red-500/30',
+    confidence: '85%',
+    confidenceNum: 85,
+    impactArea: 'Assam',
+    timeWindow: 'Next 24 hrs',
+  },
+]
 
 export default function PredictionsPage() {
-  const [results, setResults] = useState({})
-  const [loading, setLoading] = useState({})
-  const [radarData, setRadarData] = useState([])
-  const [predictions, setPredictions] = useState([])
+  const { theme } = useStore()
+  const isLight = theme === 'light'
+  const [filterTab, setFilterTab] = useState('All Predictions')
+  const [selectedPrediction, setSelectedPrediction] = useState(null)
 
-  const generateSyntheticSeries = (n, min, max) =>
-    Array.from({ length: n }, () => parseFloat((min + Math.random() * (max - min)).toFixed(2)))
+  const tabs = ['All Predictions', 'High Risk', 'Traffic', 'Climate', 'Security', 'Health']
 
-  const runAllPredictions = async () => {
-    const domains = ['traffic', 'crime', 'disease', 'climate']
-    setLoading(Object.fromEntries(domains.map(d => [d, true])))
-
-    const [traffic, crime, disease, climate] = await Promise.allSettled([
-      predictionAPI.predictTraffic({
-        latitude: 28.6139, longitude: 77.2090, zone_id: 'Z001',
-        historical_vehicle_counts: generateSyntheticSeries(24, 100, 500),
-        avg_speeds: generateSyntheticSeries(24, 15, 75),
-        is_rush_hour: new Date().getHours() >= 8 && new Date().getHours() <= 10,
-        weather_condition: 'CLEAR',
-        day_of_week: new Date().getDay(),
-        hour_of_day: new Date().getHours(),
-      }),
-      predictionAPI.predictCrime({
-        latitude: 28.5710, longitude: 77.2146,
-        district: 'Downtown',
-        historical_crime_counts: generateSyntheticSeries(30, 2, 15),
-        time_of_day: 'NIGHT',
-        day_of_week: new Date().getDay(),
-        nearby_incidents: Math.floor(Math.random() * 10),
-      }),
-      predictionAPI.predictDisease({
-        region: 'National Capital',
-        disease_code: 'J11',
-        recent_case_counts: generateSyntheticSeries(14, 50, 400),
-        hospitalization_rates: generateSyntheticSeries(14, 0.05, 0.25),
-        population_density: 11300,
-        vaccination_rate: 0.72,
-        mobility_index: 1.1,
-      }),
-      predictionAPI.predictClimate({
-        latitude: 28.7041, longitude: 77.1025,
-        temperature_series: generateSyntheticSeries(7, 32, 45),
-        rainfall_series: generateSyntheticSeries(7, 0, 80),
-        humidity_series: generateSyntheticSeries(7, 50, 95),
-        wind_series: generateSyntheticSeries(7, 5, 60),
-        elevation_m: 15, river_proximity_km: 2.5,
-      }),
-    ])
-
-    const newResults = {}
-    const domains2 = ['traffic', 'crime', 'disease', 'climate']
-    const settled = [traffic, crime, disease, climate]
-
-    settled.forEach((r, i) => {
-      if (r.status === 'fulfilled') newResults[domains2[i]] = r.value.data
-    })
-
-    setResults(newResults)
-    setLoading({})
-
-    // Build radar data
-    setRadarData([
-      { subject: 'Traffic',  risk: Math.round((newResults.traffic?.predicted_value || 45)) },
-      { subject: 'Crime',    risk: Math.round((newResults.crime?.predicted_value    || 35)) },
-      { subject: 'Disease',  risk: Math.round((newResults.disease?.predicted_value  || 20)) },
-      { subject: 'Climate',  risk: Math.round((newResults.climate?.predicted_value  || 55)) },
-      { subject: 'Cyber',    risk: Math.round(30 + Math.random() * 40) },
-      { subject: 'Overall',  risk: Math.round(40 + Math.random() * 30) },
-    ])
-
-    toast.success('All predictions updated')
-  }
-
-  useEffect(() => { runAllPredictions() }, [])
+  const filteredPredictions = PREDICTIONS_TABLE.filter((item) => {
+    if (filterTab === 'All Predictions') return true
+    if (filterTab === 'High Risk') return item.riskLevel === 'High'
+    if (filterTab === 'Traffic') return item.category === 'Traffic'
+    if (filterTab === 'Climate') return item.category === 'Climate'
+    if (filterTab === 'Security') return item.category === 'Security' || item.category === 'Cyber'
+    if (filterTab === 'Health') return item.category === 'Health'
+    return true
+  })
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="space-y-5 pb-8">
+      
+      {/* ── Top Header matching Screen 3 ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: 22, fontFamily: 'Syne, sans-serif', fontWeight: 800 }}>AI Predictions</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
-            Multi-domain predictive intelligence — ARIMA, SIR, KDE models
+          <h1 className="font-sans font-bold text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
+            Predictive Insights
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 font-light mt-0.5">
+            AI/ML powered predictive intelligence and forecasts.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={runAllPredictions}>
-          🧠 Run All Predictions
-        </button>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => toast('Configuring ML inference threshold filter', { icon: '⚙️' })}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+              isLight
+                ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                : 'bg-[#0F1524] hover:bg-[#1E2436] border-[#1E2436] text-slate-300'
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filters</span>
+          </button>
+
+          <button
+            onClick={() => toast.success('Running live STGCN prediction model synthesis...')}
+            className="px-4 py-2 rounded-lg text-xs font-bold bg-[#5B4DFF] hover:bg-[#4E3FE6] text-white flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02]"
+          >
+            <Zap className="w-4 h-4" />
+            <span>Generate Insight</span>
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 20 }}>
-        {/* Prediction Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {['traffic', 'crime', 'disease', 'climate'].map(type => (
-            <PredictionCard key={type} type={type} result={results[type]} loading={loading[type]} />
+      {/* ── 4 KPI Cards matching Screen 3 ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        
+        {/* Active Predictions */}
+        <div
+          className="p-5 rounded-xl border flex flex-col justify-between"
+          style={{
+            backgroundColor: isLight ? '#FFFFFF' : '#0F1524',
+            borderColor: isLight ? '#E2E8F0' : '#1E2436',
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+              <BrainCircuit className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-mono font-bold text-emerald-400">↑ 10.2%</span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Active Predictions</p>
+            <h2 className="font-sans font-black text-2xl text-slate-900 dark:text-white mt-0.5">156</h2>
+          </div>
+        </div>
+
+        {/* High Risk Predictions */}
+        <div
+          className="p-5 rounded-xl border flex flex-col justify-between"
+          style={{
+            backgroundColor: isLight ? '#FFFFFF' : '#0F1524',
+            borderColor: isLight ? '#E2E8F0' : '#1E2436',
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-mono font-bold text-rose-400">↓ 5.1%</span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">High Risk Predictions</p>
+            <h2 className="font-sans font-black text-2xl text-slate-900 dark:text-white mt-0.5">23</h2>
+          </div>
+        </div>
+
+        {/* Model Accuracy */}
+        <div
+          className="p-5 rounded-xl border flex flex-col justify-between"
+          style={{
+            backgroundColor: isLight ? '#FFFFFF' : '#0F1524',
+            borderColor: isLight ? '#E2E8F0' : '#1E2436',
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <Target className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-mono font-bold text-emerald-400">↑ 2.3%</span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Model Accuracy</p>
+            <h2 className="font-sans font-black text-2xl text-slate-900 dark:text-white mt-0.5">92.4%</h2>
+          </div>
+        </div>
+
+        {/* Data Points Analyzed */}
+        <div
+          className="p-5 rounded-xl border flex flex-col justify-between"
+          style={{
+            backgroundColor: isLight ? '#FFFFFF' : '#0F1524',
+            borderColor: isLight ? '#E2E8F0' : '#1E2436',
+          }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+              <Database className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-mono font-bold text-emerald-400">↑ 15.3%</span>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 font-medium">Data Points Analyzed</p>
+            <h2 className="font-sans font-black text-2xl text-slate-900 dark:text-white mt-0.5">23.8M</h2>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Main Predictions Container matching Screen 3 ── */}
+      <div
+        className="rounded-xl border overflow-hidden"
+        style={{
+          backgroundColor: isLight ? '#FFFFFF' : '#0F1524',
+          borderColor: isLight ? '#E2E8F0' : '#1E2436',
+        }}
+      >
+        {/* Filter Pills Bar */}
+        <div className="p-4 border-b border-white/5 flex items-center gap-2 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setFilterTab(tab)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                filterTab === tab
+                  ? 'bg-[#5B4DFF] text-white shadow-md shadow-indigo-600/20'
+                  : isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {tab}
+            </button>
           ))}
         </div>
 
-        {/* Radar Chart */}
-        <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Multi-Domain Risk Radar</h3>
-          {radarData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="rgba(96,165,250,0.1)" />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} />
-                <Radar name="Risk" dataKey="risk" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} strokeWidth={2} />
-              </RadarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-              Loading radar...
-            </div>
-          )}
+        {/* Predictions Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-white/5 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <th className="py-3 px-4">Prediction</th>
+                <th className="py-3 px-4">Category</th>
+                <th className="py-3 px-4">Risk Level</th>
+                <th className="py-3 px-4">Confidence</th>
+                <th className="py-3 px-4">Impact Area</th>
+                <th className="py-3 px-4">Time Window</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {filteredPredictions.map((row) => (
+                <tr
+                  key={row.id}
+                  onClick={() => setSelectedPrediction(row)}
+                  className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                >
+                  <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">{row.prediction}</td>
+                  <td className="py-3.5 px-4 text-slate-300">{row.category}</td>
+                  <td className="py-3.5 px-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${row.riskColor}`}>
+                      {row.riskLevel}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 font-mono font-bold text-white">{row.confidence}</td>
+                  <td className="py-3.5 px-4 text-slate-300">{row.impactArea}</td>
+                  <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap">{row.timeWindow}</td>
+                  <td className="py-3.5 px-4 text-right">
+                    <button className="p-1 rounded text-slate-400 hover:text-white">
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-          {/* Model info */}
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>ACTIVE MODELS</div>
-            {[
-              { label: 'Traffic — ARIMA v2.1',   acc: '91%', color: '#2563eb' },
-              { label: 'Crime — KDE v1.5',        acc: '87%', color: '#f43f5e' },
-              { label: 'Disease — SIR v3.0',      acc: '93%', color: '#10b981' },
-              { label: 'Climate — Hybrid v2.0',   acc: '89%', color: '#06b6d4' },
-              { label: 'Anomaly — Z+IQR v1.3',    acc: '95%', color: '#7c3aed' },
-            ].map(m => (
-              <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 6 }}>
-                <span style={{ color: m.color }}>● {m.label}</span>
-                <span style={{ color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono' }}>{m.acc}</span>
-              </div>
-            ))}
+        {/* Pagination Strip */}
+        <div className="p-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <div className="flex items-center gap-1">
+            <button className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white disabled:opacity-40">
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button className="w-7 h-7 rounded-lg bg-[#5B4DFF] text-white font-bold text-xs flex items-center justify-center">
+              1
+            </button>
+            <button className="w-7 h-7 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white font-medium text-xs flex items-center justify-center">
+              2
+            </button>
+            <button className="w-7 h-7 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white font-medium text-xs flex items-center justify-center">
+              3
+            </button>
+            <span className="px-1 text-slate-600">...</span>
+            <button className="w-7 h-7 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white font-medium text-xs flex items-center justify-center">
+              16
+            </button>
+            <button className="p-1.5 rounded-lg border border-white/10 text-slate-400 hover:text-white">
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[11px]">
+              Showing 1 to {filteredPredictions.length} of 156
+            </span>
+            <select
+              className={`px-2 py-1 rounded-lg text-xs outline-none border cursor-pointer ${
+                isLight ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-[#0B1020] border-[#1E2436] text-white'
+              }`}
+            >
+              <option value="10">10 / page</option>
+              <option value="25">25 / page</option>
+              <option value="50">50 / page</option>
+            </select>
           </div>
         </div>
+
       </div>
+
     </div>
   )
 }

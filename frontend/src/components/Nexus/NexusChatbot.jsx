@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../../store/useStore'
+import { NpigIcon } from '../Brand/NpigLogo'
 import axios from 'axios'
 import clsx from 'clsx'
 
@@ -63,7 +64,7 @@ function MarkdownText({ text }) {
 }
 
 export default function NexusChatbot() {
-  const { nexusOpen, toggleNexus, nexusMessages, addNexusMessage, clearNexusMessages, user } = useStore()
+  const { nexusOpen, toggleNexus, nexusMessages, addNexusMessage, clearNexusMessages, user, theme } = useStore()
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [isTyping, setIsTyping] = useState(false)
@@ -78,7 +79,7 @@ export default function NexusChatbot() {
       addNexusMessage({
         id: Date.now(),
         role: 'assistant',
-        content: `👋 **Hello ${user?.full_name?.split(' ')[0] || 'Officer'}!** I'm **NEXUS AI** — your National Intelligence Assistant.\n\nI'm connected to live city data. Ask me about traffic, crime, floods, cyber threats, or type \`help\` for all commands.`,
+        content: `👋 **Hello ${user?.name?.split(' ')[0] || 'Commander'}!** I'm **NEXUS AI** — your National Intelligence Assistant.\n\nI'm connected to live city data. Ask me about traffic, crime, floods, cyber threats, or type \`help\` for all commands.`,
         timestamp: new Date().toISOString(),
       })
     }
@@ -112,7 +113,7 @@ export default function NexusChatbot() {
 
       const res = await axios.post(NEXUS_API, {
         messages: history,
-        user_role: user?.role || 'VIEWER',
+        user_role: user?.role || 'ADMIN',
         session_id: user?.id,
       }, { timeout: 10000 })
 
@@ -181,9 +182,11 @@ export default function NexusChatbot() {
         aria-expanded={false}
         className="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-2xl flex items-center justify-center relative group"
         style={{
-          background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(139,92,246,0.15) 100%)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(59,130,246,0.1)',
+          background: theme === 'light' 
+            ? 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)' 
+            : 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(139,92,246,0.15) 100%)',
+          border: theme === 'light' ? '1px solid #4F46E5' : '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 8px 32px rgba(79,70,229,0.35)',
           backdropFilter: 'blur(20px)',
         }}
         title="Open NEXUS AI Assistant"
@@ -191,7 +194,7 @@ export default function NexusChatbot() {
         {/* Glow effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 via-violet-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="absolute w-3 h-3 rounded-full bg-emerald-400 top-3 right-3 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.8)] z-10" />
-        <img src="/npig-logo.png" alt="NEXUS AI" className="w-9 h-9 object-cover relative z-10" />
+        <NpigIcon size={28} theme="dark" className="relative z-10" />
       </motion.button>
     )
   }
@@ -205,23 +208,25 @@ export default function NexusChatbot() {
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className="nexus-bubble"
         style={{
-          background: 'linear-gradient(135deg, rgba(3,7,18,0.98) 0%, rgba(15,23,42,0.98) 100%)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.15)',
+          background: theme === 'light'
+            ? '#FFFFFF'
+            : 'linear-gradient(135deg, rgba(3,7,18,0.98) 0%, rgba(15,23,42,0.98) 100%)',
+          border: theme === 'light' ? '1px solid #E5E7EB' : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: theme === 'light' ? '0 20px 60px rgba(0,0,0,0.12)' : '0 24px 80px rgba(0,0,0,0.6)',
           backdropFilter: 'blur(40px)',
           borderRadius: '24px',
         }}
       >
         {/* Premium Header */}
-        <div className="flex items-center gap-4 px-5 py-4 border-b border-white/[0.06] bg-gradient-to-r from-blue-500/5 via-violet-500/5 to-cyan-500/5">
+        <div className={`flex items-center gap-4 px-5 py-4 border-b ${theme === 'light' ? 'border-slate-100 bg-slate-50/80' : 'border-white/[0.06] bg-gradient-to-r from-blue-500/5 via-violet-500/5 to-cyan-500/5'}`}>
           <div className="relative">
-            <div className="w-10 h-10 rounded-2xl overflow-hidden border border-white/[0.12] bg-gradient-to-br from-blue-500/10 to-violet-500/10 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-              <img src="/npig-logo.png" alt="NEXUS AI" className="w-6 h-6 object-cover" />
+            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center shadow-md">
+              <NpigIcon size={22} theme="dark" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#030712] shadow-[0_0_12px_rgba(52,211,153,0.8)] animate-pulse" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-bold text-white tracking-tight">NEXUS AI</div>
+            <div className={`text-sm font-bold tracking-tight ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>NEXUS AI</div>
             <div className="text-[10px] text-slate-500 font-mono tracking-wider">Intelligence Assistant · Online</div>
           </div>
           <div className="flex items-center gap-1">

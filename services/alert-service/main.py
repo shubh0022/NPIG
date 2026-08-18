@@ -375,6 +375,35 @@ async def list_alerts(
         "counters": alert_counters,
     }
 
+@app.get("/alerts/stats")
+@app.get("/alerts/stats/summary")
+async def alert_stats():
+    active = [a for a in alerts_db.values() if a["status"] == "ACTIVE"]
+    critical = [a for a in active if a["severity"] == "CRITICAL"]
+    
+    return {
+        "total_alerts": len(alerts_db),
+        "total": len(alerts_db),
+        "active_alerts": len(active),
+        "critical_active": len(critical),
+        "by_severity": {
+            s: len([a for a in alerts_db.values() if a["severity"] == s])
+            for s in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+        },
+        "by_category": {
+            c: len([a for a in alerts_db.values() if a["category"] == c])
+            for c in ["TRAFFIC", "CRIME", "HEALTH", "CLIMATE", "CYBER", "EMERGENCY"]
+        },
+        "resolution_rate": round(
+            len([a for a in alerts_db.values() if a["status"] == "RESOLVED"]) / max(len(alerts_db), 1), 3
+        )
+    }
+
+@app.get("/health")
+@app.get("/alerts/health")
+async def health():
+    return {"status": "healthy", "service": "alert-service", "total_alerts": len(alerts_db)}
+
 @app.get("/alerts/{alert_id}")
 async def get_alert(alert_id: str):
     alert = alerts_db.get(alert_id)
@@ -410,28 +439,6 @@ async def dismiss_alert(alert_id: str):
     alert["updated_at"] = datetime.utcnow().isoformat()
     return {"success": True, "alert_id": alert_id}
 
-@app.get("/alerts/stats/summary")
-async def alert_stats():
-    active = [a for a in alerts_db.values() if a["status"] == "ACTIVE"]
-    critical = [a for a in active if a["severity"] == "CRITICAL"]
-    
-    return {
-        "total_alerts": len(alerts_db),
-        "active_alerts": len(active),
-        "critical_active": len(critical),
-        "by_severity": {
-            s: len([a for a in alerts_db.values() if a["severity"] == s])
-            for s in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
-        },
-        "by_category": {
-            c: len([a for a in alerts_db.values() if a["category"] == c])
-            for c in ["TRAFFIC", "CRIME", "HEALTH", "CLIMATE", "CYBER", "EMERGENCY"]
-        },
-        "resolution_rate": round(
-            len([a for a in alerts_db.values() if a["status"] == "RESOLVED"]) / max(len(alerts_db), 1), 3
-        )
-    }
-
 @app.websocket("/ws/alerts")
 async def alerts_websocket(websocket: WebSocket):
     await websocket.accept()
@@ -446,7 +453,3 @@ async def alerts_websocket(websocket: WebSocket):
             await asyncio.sleep(1)
     except:
         websocket_clients.remove(websocket)
-
-@app.get("/alerts/health")
-async def health():
-    return {"status": "healthy", "service": "alert-service", "total_alerts": len(alerts_db)}

@@ -654,6 +654,7 @@ async def get_dashboard_snapshot():
         "model_accuracy": {"traffic": 0.91, "crime": 0.87, "health": 0.93, "climate": 0.89}
     }
 
+@app.get("/health")
 @app.get("/predict/health")
 async def health():
     return {"status": "healthy", "service": "prediction-service", "engines": ["arima", "anomaly-detection", "sir-model", "kde"]}

@@ -422,6 +422,7 @@ async def get_status():
         "version": "1.0.0"
     }
 
+@app.get("/health")
 @app.get("/ingest/health")
 async def health():
     return {"status": "healthy", "service": "ingestion-service"}

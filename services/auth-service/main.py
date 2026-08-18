@@ -34,6 +34,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+@app.get("/auth/health")
+async def health_check():
+    return {"status": "healthy", "service": "auth-service"}
+
 # --- Config ---
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "npig-super-secret-key-2024")
 ALGORITHM = "HS256"

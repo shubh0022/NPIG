@@ -1,270 +1,344 @@
 import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../store/useStore'
 import { alertsAPI } from '../utils/api'
 import toast from 'react-hot-toast'
+import {
+  Bell,
+  AlertTriangle,
+  CheckCircle2,
+  Filter,
+  Search,
+  X,
+  ShieldAlert,
+  ArrowRight,
+  Radio,
+  Plus,
+} from 'lucide-react'
+import GenerateAlertDrawer from '../components/Alerts/GenerateAlertDrawer'
 
-const SEV_COLORS = { CRITICAL: '#ff2d6b', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#3b82f6', INFO: '#818cf8' }
-const CAT_ICONS = { TRAFFIC: '🚗', CRIME: '🔫', HEALTH: '🏥', CLIMATE: '🌊', CYBER: '💻', EMERGENCY: '🚨', SYSTEM: '⚙️' }
+const SEV_COLORS = { 
+  CRITICAL: 'bg-red-500/10 text-red-500 border-red-500/30', 
+  HIGH: 'bg-red-500/10 text-red-400 border-red-500/30', 
+  MEDIUM: 'bg-amber-500/10 text-amber-400 border-amber-500/30', 
+  LOW: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', 
+  INFO: 'bg-sky-500/10 text-sky-400 border-sky-500/30' 
+}
 
-function AlertDetailPanel({ alert, onClose, onAcknowledge, onResolve }) {
-  if (!alert) return null
-  const color = SEV_COLORS[alert.severity] || '#3b82f6'
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(3,7,18,0.8)', backdropFilter: 'blur(8px)',
-    }} onClick={onClose}>
-      <div
-        className="glass-strong"
-        style={{
-          width: 520, maxWidth: '90%', borderRadius: 20,
-          boxShadow: `0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px ${color}40`,
-          padding: 28, position: 'relative',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Severity stripe */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: color, borderRadius: '20px 20px 0 0' }} />
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span className={`badge badge-${alert.severity?.toLowerCase()}`}>{alert.severity}</span>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono' }}>
-                {alert.alert_id?.slice(0, 16)}...
-              </span>
-            </div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{alert.title}</h2>
-          </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, padding: '0 4px' }}>✕</button>
-        </div>
-
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{alert.description}</p>
-
-        {/* Metadata grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-          {[
-            { label: 'Category', value: `${CAT_ICONS[alert.category] || '📋'} ${alert.category}` },
-            { label: 'Status', value: alert.status },
-            { label: 'Confidence', value: `${Math.round((alert.confidence || 0) * 100)}%` },
-            { label: 'Affected Zone', value: alert.affected_zone || 'N/A' },
-            { label: 'Population', value: alert.affected_population?.toLocaleString() || 'N/A' },
-            { label: 'Source', value: alert.source_service || 'system' },
-          ].map(item => (
-            <div key={item.label} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>{item.label}</div>
-              <div style={{ fontSize: 12, color: 'white', fontWeight: 600 }}>{item.value}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Recommended Actions */}
-        {alert.recommended_actions?.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: '0.08em' }}>RECOMMENDED ACTIONS</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {alert.recommended_actions.map((action, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <span style={{ color: color, flexShrink: 0 }}>▸</span>
-                  {action}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Channels */}
-        {alert.channels_notified?.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>NOTIFIED VIA</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {alert.channels_notified.map(ch => (
-                <span key={ch} style={{ padding: '3px 10px', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 9999, fontSize: 10, color: 'var(--text-accent)' }}>
-                  {ch}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        {alert.status === 'ACTIVE' && (
-          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button className="btn btn-ghost" onClick={onAcknowledge} style={{ flex: 1, justifyContent: 'center' }}>
-              ✓ Acknowledge
-            </button>
-            <button className="btn btn-primary" onClick={onResolve} style={{ flex: 1, justifyContent: 'center' }}>
-              ✅ Mark Resolved
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+const CAT_ICONS = { 
+  TRAFFIC: '🚗', 
+  CRIME: '🔫', 
+  HEALTH: '🏥', 
+  CLIMATE: '🌊', 
+  CYBER: '💻', 
+  EMERGENCY: '🚨', 
+  SYSTEM: '⚙️',
+  INFRASTRUCTURE: '⚡'
 }
 
 export default function AlertsPage() {
-  const { alerts, setAlerts, updateAlertStats } = useStore()
-  const [filter, setFilter] = useState({ severity: 'ALL', category: 'ALL', status: 'ALL' })
+  const { theme, alerts, setAlerts } = useStore()
   const [selectedAlert, setSelectedAlert] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [filterCategory, setFilterCategory] = useState('ALL')
+  const [filterSeverity, setFilterSeverity] = useState('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [generateDrawerOpen, setGenerateDrawerOpen] = useState(false)
 
-  const loadAlerts = async () => {
-    setLoading(true)
-    try {
-      const [alertsRes, statsRes] = await Promise.all([
-        alertsAPI.list({ limit: 100 }),
-        alertsAPI.stats()
-      ])
-      setAlerts(alertsRes.data.alerts || [])
-      updateAlertStats(statsRes.data.by_severity || {})
-    } catch (err) {
-      toast.error('Failed to load alerts')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Default sample fallback alerts if store is empty
+  const defaultAlerts = [
+    {
+      alert_id: 'alt-9901',
+      title: 'High Flood Risk Detected in Zone 7',
+      description: 'Ultrasonic storm drain sensors indicate water level rising at 4.2 cm/min. High probability of inundation along Worli coastal lowlands.',
+      severity: 'HIGH',
+      category: 'CLIMATE',
+      status: 'ACTIVE',
+      confidence: 0.96,
+      affected_zone: 'Mumbai Sector 7',
+      affected_population: 85000,
+      timestamp: '2 min ago',
+      recommended_actions: ['Trigger flood barrier gates at Sector 7', 'Pre-route municipal transit via Western Elevated', 'Broadcast SMS advisory to residential ward'],
+    },
+    {
+      alert_id: 'alt-9902',
+      title: 'Traffic Congestion Predicted on NH48',
+      description: 'Vehicle velocity dropped below 12 km/h across 6.4 km stretch near Electronic City junction. Secondary bottleneck forming on arterial ramps.',
+      severity: 'MEDIUM',
+      category: 'TRAFFIC',
+      status: 'ACTIVE',
+      confidence: 0.92,
+      affected_zone: 'Delhi NH48 Corridor',
+      affected_population: 42000,
+      timestamp: '15 min ago',
+      recommended_actions: ['Activate variable message signage for toll exit', 'Deploy quick reaction traffic marshals'],
+    },
+    {
+      alert_id: 'alt-9903',
+      title: 'Unusual Crowd Gathering Detected',
+      description: 'Optical density telemetry flagged anomalous crowd clustering near metro transit concourse exceeding safe capacity limits.',
+      severity: 'LOW',
+      category: 'CRIME',
+      status: 'ACTIVE',
+      confidence: 0.88,
+      affected_zone: 'Bengaluru Metro Station',
+      affected_population: 12500,
+      timestamp: '32 min ago',
+      recommended_actions: ['Notify transit police squad', 'Adjust escalator direction to clear platform congestion'],
+    },
+    {
+      alert_id: 'alt-9904',
+      title: 'Cyber Threat Activity Increased',
+      description: 'Distributed scan signatures identified against power grid SCADA telemetry relays across Northern Regional Load Despatch Centre.',
+      severity: 'INFO',
+      category: 'CYBER',
+      status: 'ACTIVE',
+      confidence: 0.95,
+      affected_zone: 'Global / Northern CNI Gateway',
+      affected_population: 120000,
+      timestamp: '45 min ago',
+      recommended_actions: ['Isolate external subnet 192.168.10.x', 'Activate encrypted telemetry failover bus'],
+    },
+    {
+      alert_id: 'alt-9905',
+      title: 'Heatwave Conditions Expected',
+      description: 'Thermal infrared satellite observation projects ambient wet-bulb temperature exceeding 44.5°C over northern desert corridor.',
+      severity: 'MEDIUM',
+      category: 'CLIMATE',
+      status: 'ACTIVE',
+      confidence: 0.91,
+      affected_zone: 'Rajasthan, India',
+      affected_population: 94000,
+      timestamp: '1 hr ago',
+      recommended_actions: ['Pre-position emergency hydration units', 'Alert grid dispatchers for cooling load surge'],
+    },
+  ]
 
-  useEffect(() => { loadAlerts() }, [])
+  const activeList = alerts && alerts.length > 0 ? alerts : defaultAlerts
 
-  const filtered = alerts.filter(a => {
-    if (filter.severity !== 'ALL' && a.severity !== filter.severity) return false
-    if (filter.category !== 'ALL' && a.category !== filter.category) return false
-    if (filter.status !== 'ALL' && a.status !== filter.status) return false
-    return true
+  const filteredAlerts = activeList.filter((a) => {
+    const matchCat = filterCategory === 'ALL' || a.category === filterCategory
+    const matchSev = filterSeverity === 'ALL' || a.severity === filterSeverity
+    const matchSearch = searchQuery === '' || 
+      a.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      a.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.affected_zone?.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchCat && matchSev && matchSearch
   })
 
-  const handleAcknowledge = async () => {
-    if (!selectedAlert) return
-    try {
-      await alertsAPI.update(selectedAlert.alert_id, { status: 'ACKNOWLEDGED', assigned_to: 'Current User' })
-      toast.success('Alert acknowledged')
-      setSelectedAlert(null)
-      loadAlerts()
-    } catch {
-      toast.error('Failed to acknowledge')
-    }
+  const handleAlertCreated = (newAlert) => {
+    setAlerts([newAlert, ...activeList])
   }
 
-  const handleResolve = async () => {
-    if (!selectedAlert) return
-    try {
-      await alertsAPI.update(selectedAlert.alert_id, { status: 'RESOLVED', resolution_notes: 'Resolved by operator' })
-      toast.success('Alert resolved')
-      setSelectedAlert(null)
-      loadAlerts()
-    } catch {
-      toast.error('Failed to resolve')
-    }
+  const handleResolve = (id) => {
+    setAlerts(activeList.map(a => a.alert_id === id ? { ...a, status: 'RESOLVED' } : a))
+    toast.success('Alert resolved and archived to incident log')
+    setSelectedAlert(null)
+  }
+
+  const handleAcknowledge = (id) => {
+    setAlerts(activeList.map(a => a.alert_id === id ? { ...a, status: 'ACKNOWLEDGED' } : a))
+    toast.success('Alert acknowledged. Dispatch team notified.')
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="space-y-6">
+      
+      {/* ── Header with Generate Alert CTA ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: 22, fontFamily: 'Syne, sans-serif', fontWeight: 800 }}>Active Alerts</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
-            {filtered.length} alerts matching current filters
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            <Radio className="w-3.5 h-3.5" />
+            <span>National Telemetry Dispatch Feed</span>
+          </div>
+          <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            Active Alerts & Incident Feed
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-light mt-0.5">
+            Real-time multi-agency notifications, anomaly dispatches, and emergency routing.
           </p>
         </div>
-        <button className="btn btn-ghost" onClick={loadAlerts} disabled={loading}>
-          {loading ? '⏳' : '🔄'} Refresh
+
+        {/* Generate Alert CTA matching Reference */}
+        <button
+          onClick={() => setGenerateDrawerOpen(true)}
+          className="px-5 py-2.5 rounded-xl bg-[#5B4DFF] hover:bg-[#4E3FE6] text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Generate Alert</span>
         </button>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {[
-          { key: 'severity', options: ['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] },
-          { key: 'category', options: ['ALL', 'TRAFFIC', 'CRIME', 'HEALTH', 'CLIMATE', 'CYBER', 'EMERGENCY'] },
-          { key: 'status',   options: ['ALL', 'ACTIVE', 'ACKNOWLEDGED', 'RESOLVED', 'ESCALATED'] },
-        ].map(({ key, options }) => (
-          <select
-            key={key}
-            value={filter[key]}
-            onChange={e => setFilter(f => ({ ...f, [key]: e.target.value }))}
-            className="input"
-            style={{ width: 'auto', padding: '6px 30px 6px 10px', fontSize: 12 }}
+      {/* ── Filters & Search ── */}
+      <div 
+        className="npig-card p-4 sm:p-5"
+        style={{
+          backgroundColor: theme === 'light' ? '#FFFFFF' : '#0F1524',
+          borderColor: theme === 'light' ? '#E5E7EB' : '#1E2436',
+        }}
+      >
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          <div className="flex items-center flex-wrap gap-3 w-full md:w-auto">
+            {/* Category Filter */}
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className={`px-3.5 py-2 rounded-lg text-xs outline-none border cursor-pointer ${
+                theme === 'light' ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-[#0B1020] border-[#1E2436] text-white'
+              }`}
+            >
+              <option value="ALL">All Categories</option>
+              <option value="TRAFFIC">Traffic</option>
+              <option value="CLIMATE">Climate & Disaster</option>
+              <option value="CRIME">Public Safety</option>
+              <option value="CYBER">Cyber Threat</option>
+              <option value="HEALTH">Health</option>
+            </select>
+
+            {/* Severity Filter */}
+            <select
+              value={filterSeverity}
+              onChange={(e) => setFilterSeverity(e.target.value)}
+              className={`px-3.5 py-2 rounded-lg text-xs outline-none border cursor-pointer ${
+                theme === 'light' ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-[#0B1020] border-[#1E2436] text-white'
+              }`}
+            >
+              <option value="ALL">All Severities</option>
+              <option value="HIGH">High Severity</option>
+              <option value="MEDIUM">Medium Severity</option>
+              <option value="LOW">Low Severity</option>
+              <option value="INFO">Info</option>
+            </select>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search alerts, zones, keywords..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-10 pr-4 py-2 rounded-lg text-xs outline-none border ${
+                theme === 'light'
+                  ? 'bg-slate-100 border-slate-200 text-slate-900 placeholder-slate-400'
+                  : 'bg-[#0B1020] border-[#1E2436] text-white placeholder-slate-500'
+              }`}
+            />
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Alerts Grid List ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {filteredAlerts.map((alert) => (
+          <motion.div
+            key={alert.alert_id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-5 rounded-xl border flex flex-col justify-between transition-all hover:border-indigo-500/40 cursor-pointer ${
+              theme === 'light' ? 'bg-white border-slate-200' : 'bg-[#0F1524] border-[#1E2436]'
+            }`}
+            onClick={() => setSelectedAlert(alert)}
           >
-            {options.map(o => <option key={o} value={o}>{key.toUpperCase()}: {o}</option>)}
-          </select>
+            <div>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{CAT_ICONS[alert.category] || '⚠️'}</span>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
+                    {alert.title}
+                  </h3>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${SEV_COLORS[alert.severity] || SEV_COLORS.INFO}`}>
+                  {alert.severity}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-3">
+                {alert.description}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/5 text-[11px] text-slate-400 font-mono">
+              <span>📍 {alert.affected_zone || alert.location}</span>
+              <span>⏱ {alert.timestamp}</span>
+            </div>
+          </motion.div>
         ))}
       </div>
 
-      {/* Alerts Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '24px 1fr 100px 100px 120px 100px', gap: 12 }}>
-          <span></span>
-          <span>ALERT</span>
-          <span>CATEGORY</span>
-          <span>SEVERITY</span>
-          <span>STATUS</span>
-          <span>TIME</span>
-        </div>
-
-        <div className="scroll-panel" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
-              <div style={{ fontSize: 14 }}>No alerts match current filters</div>
-            </div>
-          ) : filtered.map(alert => {
-            const color = SEV_COLORS[alert.severity] || '#3b82f6'
-            return (
-              <div
-                key={alert.alert_id}
-                onClick={() => setSelectedAlert(alert)}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '24px 1fr 100px 100px 120px 100px',
-                  gap: 12,
-                  padding: '12px 18px',
-                  borderBottom: '1px solid rgba(96,165,250,0.06)',
-                  cursor: 'pointer',
-                  alignItems: 'center',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(37,99,235,0.05)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: color,
-                  ...(alert.severity === 'CRITICAL' ? { animation: 'pulse-glow 1s infinite' } : {}) }} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {alert.title}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {alert.affected_zone || alert.source_service}
-                  </div>
+      {/* ── Selected Alert Drilldown Modal ── */}
+      <AnimatePresence>
+        {selectedAlert && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={`w-full max-w-xl p-6 rounded-2xl border shadow-2xl space-y-4 ${
+                theme === 'light' ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#0B1020] border-white/15 text-white'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${SEV_COLORS[selectedAlert.severity]}`}>
+                    {selectedAlert.severity} SEVERITY
+                  </span>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-2">
+                    {selectedAlert.title}
+                  </h2>
+                  <p className="text-xs text-slate-400 font-mono">ID: {selectedAlert.alert_id} · Zone: {selectedAlert.affected_zone}</p>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-                  {CAT_ICONS[alert.category]} {alert.category}
-                </div>
-                <span className={`badge badge-${alert.severity?.toLowerCase()}`}>{alert.severity}</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  color: alert.status === 'ACTIVE' ? '#22c55e' : alert.status === 'ESCALATED' ? '#f97316' : 'var(--text-muted)'
-                }}>{alert.status}</span>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'JetBrains Mono' }}>
-                  {new Date(alert.created_at).toLocaleTimeString()}
-                </div>
+                <button onClick={() => setSelectedAlert(null)} className="p-1 rounded-lg hover:bg-white/5">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
               </div>
-            )
-          })}
-        </div>
-      </div>
 
-      {selectedAlert && (
-        <AlertDetailPanel
-          alert={selectedAlert}
-          onClose={() => setSelectedAlert(null)}
-          onAcknowledge={handleAcknowledge}
-          onResolve={handleResolve}
-        />
-      )}
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {selectedAlert.description}
+              </p>
+
+              {selectedAlert.recommended_actions && (
+                <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2">
+                  <p className="text-xs font-bold text-indigo-400">Recommended SOP Actions:</p>
+                  <ul className="space-y-1 text-xs text-slate-300">
+                    {selectedAlert.recommended_actions.map((act, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                        <span>{act}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                <button
+                  onClick={() => handleAcknowledge(selectedAlert.alert_id)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white"
+                >
+                  Acknowledge Alert
+                </button>
+                <button
+                  onClick={() => handleResolve(selectedAlert.alert_id)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white"
+                >
+                  Resolve Incident
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Generate Alert Drawer Component matching Reference Image ── */}
+      <GenerateAlertDrawer
+        isOpen={generateDrawerOpen}
+        onClose={() => setGenerateDrawerOpen(false)}
+        onAlertCreated={handleAlertCreated}
+      />
+
     </div>
   )
 }

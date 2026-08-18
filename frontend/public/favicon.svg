@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fav-ribbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#38BDF8" />
+      <stop offset="45%" stopColor="#0EA5E9" />
+      <stop offset="100%" stopColor="#2563EB" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="#0B132B"/>
+  <!-- N Left Stem -->
+  <path d="M16 18C16 13.58 19.58 10 24 10H32C36.42 10 40 13.58 40 18V82C40 86.42 36.42 90 32 90H24C19.58 90 16 86.42 16 82V18Z" fill="#FFFFFF"/>
+  <!-- N Right Stem -->
+  <path d="M60 18C60 13.58 63.58 10 68 10H76C80.42 10 84 13.58 84 18V82C84 86.42 80.42 90 76 90H68C63.58 90 60 86.42 60 82V18Z" fill="#FFFFFF"/>
+  <!-- N Diagonal Slash -->
+  <path d="M20 18C20 13.58 24 10 28 10C34 10 42 18 48 26L76 68C82 78 84 86.42 80 90C76 90 68 84 62 76L32 30C26 22 20 19 20 18Z" fill="url(#fav-ribbon)"/>
+</svg>

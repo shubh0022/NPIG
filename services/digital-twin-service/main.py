@@ -326,6 +326,7 @@ async def twin_websocket(websocket: WebSocket):
     except:
         websocket_clients.remove(websocket)
 
+@app.get("/health")
 @app.get("/twin/health")
 async def health():
     return {"status": "healthy", "service": "digital-twin-service", "tick": sim_state.tick}
